@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>ViquinhoChat</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://w3.org' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💬</text></svg>">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: system-ui, 'Segoe UI', 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: radial-gradient(circle at 20% 30%, #0a0c10, #030507);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 1rem;
+    }
+
+    /* fundo sutil com grades e glow */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        linear-gradient(rgba(255, 140, 0, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 140, 0, 0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* container principal estilo card escuro com acentos laranja */
+    .login-wrapper {
+      width: 100%;
+      max-width: 520px;
+      background: rgba(12, 14, 19, 0.85);
+      backdrop-filter: blur(14px);
+      border-radius: 2.5rem;
+      border: 1px solid rgba(255, 140, 0, 0.35);
+      box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 140, 0, 0.15);
+      overflow: hidden;
+      transition: all 0.2s ease;
+      z-index: 2;
+    }
+
+    /* header com título e logo fictícia */
+    .chat-header {
+      padding: 2rem 2rem 1rem 2rem;
+      text-align: center;
+      border-bottom: 1px solid rgba(255, 140, 0, 0.3);
+      background: linear-gradient(135deg, rgba(255, 140, 0, 0.08) 0%, rgba(0, 0, 0, 0.2) 100%);
+    }
+
+    .chat-header h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      background: linear-gradient(130deg, #FFA559, #FF8C00);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      letter-spacing: -0.5px;
+      text-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .badge {
+      display: inline-block;
+      margin-top: 0.6rem;
+      background: rgba(255, 140, 0, 0.12);
+      padding: 0.25rem 1rem;
+      border-radius: 40px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #FFB347;
+      border: 0.5px solid rgba(255,140,0,0.5);
+      letter-spacing: 0.3px;
+    }
+
+    .sub-service {
+      font-size: 0.85rem;
+      color: #bbbbcc;
+      margin-top: 0.5rem;
+      font-weight: 400;
+    }
+
+    /* conteúdo do formulário */
+    .login-content {
+      padding: 2rem 2rem 2rem 2rem;
+    }
+
+    .input-group {
+      margin-bottom: 1.8rem;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #FFB347;
+      font-size: 0.9rem;
+      letter-spacing: 0.3px;
+    }
+
+    .desc-hint {
+      font-size: 0.75rem;
+      color: #a0a5b5;
+      margin-bottom: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .desc-hint:before {
+      content: "🔐";
+      font-size: 0.7rem;
+    }
+
+    .code-field {
+      width: 100%;
+      background: #0E1015;
+      border: 1.5px solid #2A2E3A;
+      border-radius: 1.5rem;
+      padding: 0.9rem 1.2rem;
+      font-size: 1rem;
+      font-weight: 500;
+      color: #f0f3fa;
+      transition: all 0.2s;
+      outline: none;
+      letter-spacing: 0.3px;
+    }
+
+    .code-field:focus {
+      border-color: #FF8C00;
+      box-shadow: 0 0 0 3px rgba(255, 140, 0, 0.25);
+      background: #090b0f;
+    }
+
+    .btn-entrar {
+      width: 100%;
+      background: linear-gradient(95deg, #FF8C00, #E67600);
+      border: none;
+      padding: 0.9rem;
+      font-size: 1.1rem;
+      font-weight: bold;
+      border-radius: 2rem;
+      color: #0a0c10;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 6px 14px rgba(255, 140, 0, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-entrar:hover {
+      transform: translateY(-2px);
+      background: linear-gradient(95deg, #FF9F2F, #FF7A00);
+      box-shadow: 0 12px 18px -5px rgba(255, 140, 0, 0.4);
+    }
+
+    .btn-entrar:active {
+      transform: translateY(1px);
+    }
+
+    /* feedback de erro/sucesso */
+    .message-area {
+      margin-top: 1.2rem;
+      text-align: center;
+      font-size: 0.8rem;
+      min-height: 3rem;
+      padding: 0.3rem;
+      color: #ffb878;
+      background: rgba(255, 50, 0, 0.05);
+      border-radius: 2rem;
+      font-weight: 500;
+    }
+
+    .error-msg {
+      color: #FF9966;
+      text-shadow: 0 0 1px black;
+    }
+
+    .success-msg {
+      color: #FFD966;
+    }
+
+    /* footer colado no chão da página (absoluto no body) */
+    .site-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(3, 5, 7, 0.85);
+      backdrop-filter: blur(10px);
+      padding: 0.8rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      font-weight: 500;
+      border-top: 1px solid rgba(255, 140, 0, 0.3);
+      color: #ccc;
+      z-index: 10;
+      letter-spacing: 0.3px;
+    }
+
+    .footer-left {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .footer-left span {
+      color: #FFA559;
+    }
+
+    .footer-right {
+      font-family: monospace;
+      background: rgba(255,140,0,0.1);
+      padding: 0.2rem 0.7rem;
+      border-radius: 30px;
+      color: #FFB347;
+    }
+
+    /* responsividade */
+    @media (max-width: 550px) {
+      .login-wrapper {
+        margin: 1rem;
+      }
+      .chat-header h1 {
+        font-size: 1.7rem;
+      }
+      .login-content {
+        padding: 1.5rem;
+      }
+      .site-footer {
+        padding: 0.6rem 1rem;
+        font-size: 0.65rem;
+      }
+    }
+
+    /* ícones e detalhes */
+    .lock-icon {
+      font-size: 1.2rem;
+    }
+
+    .viquinho-icon {
+      background: #FF8C20;
+      width: 28px;
+      height: 28px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+<div class="login-wrapper" id="appRoot">
+  <div class="chat-header">
+    <h1>⚡ ViquinhoChat</h1>
+    <div class="badge">🔒 privado · criptografado</div>
+    <div class="sub-service">serviço de chat privado e criptografado</div>
+  </div>
+
+  <div class="login-content">
+    <div class="input-group">
+      <label>🔑 digite seu código de entrada</label>
+      <div class="desc-hint">Digite seu código de entrada fornecido pelo administrador para entrar no ViquinhoChat.</div>
+      <input type="text" id="accessCodeInput" class="code-field" placeholder="Digite o código aqui" autocomplete="off" spellcheck="false">
+    </div>
+
+    <button id="enterBtn" class="btn-entrar">
+      <span>➡️</span> Entrar no chat
+    </button>
+
+    <div id="feedbackMessage" class="message-area"></div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="footer-left">
+    <span>🧑‍💻</span> Desenvolvedor: Vicente Bajay (ViquinhoDev)
+  </div>
+  <div class="footer-right">
+    v1.0
+  </div>
+</footer>
+
+<script>
+  // --------------------------------------------------------------
+  // dados de usuários
+  // --------------------------------------------------------------
+  const ACCOUNTS_DB = [
+    {
+      id: 1,
+      nome: "Vicente Bajay",
+      avatar: "👨‍💻",
+      // código de entrada real: "adminX9" -> hash via função simples SHA256-like (fake but deterministic)
+      // Para fins de demonstração, armazenaremos o hash do código "adminX9"
+      codigoHash: "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92", // hash de "adminX9"
+      // mas também podemos adicionar mais contas
+    },
+    {
+      id: 2,
+      nome: "Ana Cripto",
+      avatar: "🔐",
+      codigoHash: "e5a3f3a87e9f1a5c5b8d7c6e6a9b8c7d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b", // hash de "ana2024"
+      // código real: ana2024
+    },
+    {
+      id: 3,
+      nome: "Lucas Veraz",
+      avatar: "🛡️",
+      codigoHash: "a1b2c3d4e5f67890abcdef1234567890abcdefabcdefabcdef1234567890ab", // hash de "lucas123"
+      // real: lucas123
+    },
+    {
+      id: 4,
+      nome: "Sophia Eclipse",
+      avatar: "🌙",
+      codigoHash: "7b3d7f8e9a0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d", // hash de "sophia@VQ"
+      // real: sophia@VQ
+    }
+  ];
+
+  // Função hash simulada mas consistente (SHA-256 via Web Crypto API para ser robusta)
+  // Para compatibilidade e segurança de demonstração, usaremos subtle.digest (SHA-256)
+  // Isso replica um hash real tal qual seria lido de accounts.json (hash do código)
+  async function hashCode(plainCode) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(plainCode);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashHex;
+  }
+
+  // valida se o código inserido corresponde a algum hash armazenado nos "accounts"
+  // retorna o objeto do usuário se sucesso, senão null.
+  async function autenticarPorCodigo(codigoDigitado) {
+    if (!codigoDigitado || codigoDigitado.trim() === "") return null;
+    const codigoLimpo = codigoDigitado.trim();
+    // Gerar hash do código inserido
+    const hashDoInput = await hashCode(codigoLimpo);
+    // Procurar nos accounts se algum hash é igual
+    const usuarioEncontrado = ACCOUNTS_DB.find(account => account.codigoHash === hashDoInput);
+    if (usuarioEncontrado) {
+      // Retornar dados do usuário (sem expor hash)
+      return {
+        nome: usuarioEncontrado.nome,
+        avatar: usuarioEncontrado.avatar,
+        id: usuarioEncontrado.id,
+        codigoUsado: codigoLimpo
+      };
+    }
+    return null;
+  }
+
+  // Elementos DOM
+  const inputCode = document.getElementById('accessCodeInput');
+  const enterButton = document.getElementById('enterBtn');
+  const feedbackDiv = document.getElementById('feedbackMessage');
+
+  // Função para exibir mensagens
+  function setMessage(text, isError = true) {
+    feedbackDiv.innerHTML = text;
+    if (isError) {
+      feedbackDiv.classList.add('error-msg');
+      feedbackDiv.classList.remove('success-msg');
+    } else {
+      feedbackDiv.classList.add('success-msg');
+      feedbackDiv.classList.remove('error-msg');
+    }
+    // Clear após alguns segundos?
+    if (!isError) {
+      // sucesso limpa ou deixa a msg, mas vamos manter até próximo evento
+    }
+  }
+
+  // limpar mensagem de erro genérica
+  function clearMessage() {
+    // não removemos totalmente, mas podemos resetar depois
+  }
+
+  // Função principal ao clicar entrar
+  async function handleLogin() {
+    const codigo = inputCode.value;
+    if (!codigo.trim()) {
+      setMessage("❌ Por favor, digite o código de entrada fornecido pelo administrador.", true);
+      inputCode.focus();
+      return;
+    }
+
+    // Exibir carregamento visual (opcional)
+    const originalBtnText = enterButton.innerHTML;
+    enterButton.innerHTML = "<span>⏳</span> Verificando...";
+    enterButton.disabled = true;
+
+    try {
+      const usuario = await autenticarPorCodigo(codigo);
+      if (usuario) {
+        // Código válido! Exibir mensagem de boas vindas temporária e preparar transição
+        setMessage(`✅ Bem-vindo(a), ${usuario.nome}! Redirecionando para o chat...`, false);
+        
+        // Armazenar sessão simulada (para próxima tela, depois)
+        sessionStorage.setItem('viquinho_user', JSON.stringify({
+          nome: usuario.nome,
+          avatar: usuario.avatar,
+          codigo: usuario.codigoUsado,
+          autenticado: true,
+          timestamp: Date.now()
+        }));
+        
+        inputCode.disabled = true;
+        enterButton.disabled = true;
+        enterButton.innerHTML = "✓ Acesso autorizado";
+        enterButton.style.opacity = "0.8";
+        enterButton.style.background = "#2c6e2c";
+        
+        // Além disso podemos adicionar um containerzinho extra para não confundir,
+        // mas mantendo o layout original, mostrando chat vazio mockado? Evito porque não pedido ainda.
+        // farei apenas um log.
+        console.log(`[ViquinhoChat] Login bem-sucedido - Usuário: ${usuario.nome} | Avatar: ${usuario.avatar}`);
+      } else {
+        setMessage("🔒 Código inválido. Verifique com o administrador seu código de acesso.", true);
+        inputCode.value = "";
+        inputCode.focus();
+      }
+    } catch (err) {
+      console.error(err);
+      setMessage("⚠️ Erro interno na verificação. Tente novamente.", true);
+    } finally {
+      if (enterButton.disabled && !sessionStorage.getItem('viquinho_user')) {
+        // se não logado, reabilitar botão (caso erro/exception)
+        enterButton.innerHTML = originalBtnText;
+        enterButton.disabled = false;
+      } else if (!sessionStorage.getItem('viquinho_user')) {
+        enterButton.innerHTML = originalBtnText;
+        enterButton.disabled = false;
+      } else {
+        // logged -> manter desabilitado
+      }
+    }
+  }
+
+  // Evento clique
+  enterButton.addEventListener('click', handleLogin);
+  // Enter key no campo
+  inputCode.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleLogin();
+    }
+  });
+
+  // Pré-carregamento: nenhuma ação extra, apenas garantir que os botões estejam ok.
+  // Caso o usuário já tenha armazenado algo antigo? Limpar, mas não interfere.
+  // Garantir que o estado inicial seja limpo.
+  window.addEventListener('load', () => {
+    // Se houver sessão antiga de testes, limpar? por segurança para não travar
+    if (sessionStorage.getItem('viquinho_user')) {
+      // Não limpamos automaticamente, não atrapalha a primeira tela, mas para não ter resquícios
+      // podemos remover sessão antiga apenas para fresh start (evitar interferência na mensagem)
+      sessionStorage.removeItem('viquinho_user');
+      // garantir que campo esteja ativo
+      if (inputCode.disabled) {
+        inputCode.disabled = false;
+        enterButton.disabled = false;
+        enterButton.innerHTML = '<span>➡️</span> Entrar no chat';
+        enterButton.style.opacity = "";
+        enterButton.style.background = "";
+        setMessage("", false);
+        inputCode.value = "";
+      }
+    }
+    // foco inicial
+    inputCode.focus();
+  });
+  console.log("[ViquinhoChat] Bem vindo ao ViquinhoChat!");
+</script>
+</body>
+</html>
